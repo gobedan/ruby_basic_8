@@ -1,5 +1,5 @@
 module CompanyInfo
-  def company= (comp)
+  def company=(comp)
     @company = comp
   end
 

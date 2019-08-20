@@ -2,25 +2,27 @@ require_relative './instance_counter.rb'
 require_relative './instance_list.rb'
 require_relative './company_info.rb'
 
-class Train 
-  include InstanceCounter, InstanceList, CompanyInfo
+class Train
+  include CompanyInfo
+  include InstanceList
+  include InstanceCounter
 
   attr_reader :id, :route, :carriages
- 
+
   def initialize(id)
     @id = id
     validate!
     @carriages = []
     self.class.register_instance
-    self.register_instance_in_list
+    register_instance_in_list
   end
 
-  def valid? 
+  def valid?
     validate!
     true
-  rescue
+  rescue RuntimeError
     false
-  end 
+  end
 
   def self.find(id)
     instance_list.select { |train| train.id == id }.first
@@ -29,10 +31,10 @@ class Train
   def route=(route)
     current_station.depart_train(self) if self.route
     @route = route
-    self.current_station_index = 0 
-    current_station.accept_train(self) 
+    self.current_station_index = 0
+    current_station.accept_train(self)
   end
-  
+
   def each_carriage
     carriages.each { |carriage| yield carriage }
   end
@@ -42,17 +44,22 @@ class Train
   end
 
   def next_station
-    route.route_list[current_station_index + 1] if route && current_station_index + 1 < route.route_list.size
+    return unless route &&
+                  current_station_index + 1 < route.route_list.size
+
+    route.route_list[current_station_index + 1]
   end
 
   def prev_station
-    route.route_list[current_station_index + -1] if route && current_station_index > 0
+    return unless route && current_station_index.positive?
+
+    route.route_list[current_station_index + -1]
   end
 
   def remove_carriage
-    carriages.pop 
+    carriages.pop
   end
-  
+
   def add_carriage(carriage)
     carriages.push(carriage)
   end
@@ -65,28 +72,28 @@ class Train
     self.current_station_index += 1 if go(next_station)
   end
 
-  def go_back  
+  def go_back
     self.current_station_index -= 1 if go(prev_station)
   end
 
-  protected 
+  protected
 
-  VALID_ID = /^ \w{3} (|-\w{2}) $/x
-  
+  VALID_ID = /^ \w{3} (|-\w{2}) $/x.freeze
+
   attr_accessor :current_station_index
-  
+
   def validate!
     validate_train_id!
   end
 
   def validate_train_id!
-    raise "invalid train id!" unless id =~ VALID_ID
+    raise 'invalid train id!' unless id =~ VALID_ID
   end
 
   def go(station)
-    if station
-      current_station.depart_train(self)
-      station.accept_train(self)
-    end
+    return unless station
+
+    current_station.depart_train(self)
+    station.accept_train(self)
   end
 end

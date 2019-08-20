@@ -2,38 +2,39 @@ require_relative './instance_list.rb'
 require_relative './instance_counter.rb'
 
 class Station
-  include InstanceCounter, InstanceList
+  include InstanceList
+  include InstanceCounter
 
   attr_reader :trains, :name
 
   def initialize(name)
     @name = name
-    @trains = [] 
+    @trains = []
     validate!
     self.class.register_instance
-    self.register_instance_in_list
+    register_instance_in_list
   end
 
   def self.all
     instance_list
   end
-  
-  def valid? 
+
+  def valid?
     validate!
     true
-  rescue
+  rescue RuntimeError
     false
-  end 
+  end
 
   def each_train
     trains.each { |train| yield train }
   end
 
   def trains_by_type(type)
-    return trains.collect { |train|  train if train.type == type }  
+    trains.collect { |train| train if train.type == type }
   end
 
-  def accept_train(train) 
+  def accept_train(train)
     trains.push(train) unless trains.include?(train)
   end
 
@@ -48,6 +49,6 @@ class Station
   end
 
   def validate_name!
-    raise "invalid station name!" if name !~ /.{2,}/
+    raise 'invalid station name!' if name !~ /.{2,}/
   end
 end

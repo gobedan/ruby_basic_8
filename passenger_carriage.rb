@@ -8,33 +8,32 @@ class PassengerCarriage < Carriage
     @free_seats = seats
     validate!
     @taken_seats = 0
-    #Не использую готовый миксин так как хочу чтобы счетчик сущностей был общим для разных потомков
-    @@id_counter = @@id_counter + 1
+    # rubocop:disable Style/ClassVars
+    @@id_counter += 1
+    # rubocop:enable Style/ClassVars
     @id = @@id_counter
   end
 
   def take_seat
-    if (free_seats > 0) 
-      self.free_seats -= 1 
-      self.taken_seats += 1
-    else 
-      raise "No free seats available!"
-    end 
-  end 
+    raise 'No free seats available!' unless free_seats.positive?
 
-  def type 
-    :passenger_carriage 
+    self.free_seats -= 1
+    self.taken_seats += 1
   end
 
-  protected 
+  def type
+    :passenger_carriage
+  end
 
-  attr_writer :free_seats, :taken_seats 
+  protected
+
+  attr_writer :free_seats, :taken_seats
 
   def validate!
     validate_seats!
   end
 
   def validate_seats!
-    raise "Wrong seats count!" unless free_seats >= 0 
+    raise 'Wrong seats count!' unless free_seats >= 0
   end
 end
